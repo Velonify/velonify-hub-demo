@@ -1,0 +1,52 @@
+name: Demo veröffentlichen
+
+# Builds the Velonify Hub without any credentials, which makes it the in-browser demo (invented agency, no server,
+# no real data), and publishes it on GitHub Pages. Run it by hand after changes to the hub's demo.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, Tag oder Commit von Velonify/velonify-crm
+        default: main
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: Velonify/velonify-crm
+          ref: ${{ inputs.ref || vars.HUB_REF || 'main' }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # No VITE_* variables on purpose: without them the hub runs in demo mode.
+      - run: npm run build
+      - run: touch dist/.nojekyll
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
