@@ -6,8 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: Branch, Tag oder Commit von Velonify/velonify-crm
-        default: main
+        # Empty by default, so the repository variable HUB_REF (the demo branch) applies when nothing is entered.
+        description: Branch, Tag oder Commit von Velonify/velonify-crm (leer = Repo-Variable HUB_REF, sonst main)
+        default: ''
   push:
     branches: [main]
 
